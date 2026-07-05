@@ -3,7 +3,6 @@ services:
     name: compliance-platform-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
     plan: free
     healthCheckPath: /api/health
     envVars:
