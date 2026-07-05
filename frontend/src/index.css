@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-slate-800 bg-slate-50 antialiased;
+    min-height: 100vh;
+  }
+
+  body.dark {
+    @apply bg-dark-950 text-slate-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-dark-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-dark-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-dark-500;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary-600 text-white font-semibold text-sm
+           hover:bg-primary-700 active:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-sm
+           hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200
+           dark:border-dark-600 dark:bg-dark-800 dark:text-slate-300 dark:hover:bg-dark-700;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm
+           hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-slate-200 dark:bg-dark-800 dark:border-dark-700;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+           placeholder-slate-400 transition-all duration-200
+           dark:border-dark-600 dark:bg-dark-700 dark:text-slate-100 dark:placeholder-slate-500
+           dark:focus:ring-primary-400;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5 dark:text-slate-300;
+  }
+
+  .badge-safe {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+  }
+
+  .badge-medium {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  }
+
+  .badge-high {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  .badge-critical {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300;
+  }
+
+  .skeleton {
+    @apply rounded bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-dark-700 dark:via-dark-600 dark:to-dark-700 animate-skeleton;
+    background-size: 200% 100%;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 
+           hover:bg-slate-100 hover:text-slate-900 transition-all duration-150 cursor-pointer
+           dark:text-slate-400 dark:hover:bg-dark-700 dark:hover:text-slate-100;
+  }
+
+  .sidebar-link.active {
+    @apply bg-primary-50 text-primary-700 font-semibold
+           dark:bg-primary-900/30 dark:text-primary-400;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent;
+  }
+
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-grid-pattern {
+    background-image: radial-gradient(circle, #334155 1px, transparent 1px);
+  }
+}
