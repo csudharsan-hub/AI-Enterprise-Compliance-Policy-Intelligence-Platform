@@ -76,7 +76,7 @@
             <version>5.2.5</version>
         </dependency>
 
-        <!-- HTTP Client for Groq API + URL fetching -->
+        <!-- HTTP Client for Gemini API + URL fetching -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>

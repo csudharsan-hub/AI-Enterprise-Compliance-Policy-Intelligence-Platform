@@ -50,43 +50,56 @@ public class GroqClient {
         int maxRetries = 3;
         int attempt = 0;
         while (true) {
-          try {
-            attempt++;
-            String responseBody = webClient.post()
-                    .uri(groq.getBaseUrl() + "/chat/completions")
-                    .header("Authorization", "Bearer " + groq.getApiKey())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(requestBody.toString())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(90))
-                    .block();
+            try {
+                attempt++;
+                String responseBody = webClient.post()
+                        .uri(groq.getBaseUrl() + "/chat/completions")
+                        .header("Authorization", "Bearer " + groq.getApiKey())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(requestBody.toString())
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .timeout(Duration.ofSeconds(90))
+                        .block();
 
-            JsonNode root = objectMapper.readTree(responseBody);
-            String content = root.path("choices").get(0)
-                    .path("message").path("content").asText();
+                JsonNode root = objectMapper.readTree(responseBody);
+                String content = root.path("choices").get(0)
+                        .path("message").path("content").asText();
 
-            return cleanJsonResponse(content);
+                return cleanJsonResponse(content);
 
-          } catch (WebClientResponseException e) {
-            log.error("Groq API error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            if (e.getStatusCode().value() == 401) {
-                throw new BusinessException("Invalid Groq API key. Please check your configuration.", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            if (e.getStatusCode().value() == 429) {
-                if (attempt < maxRetries) {
-                    int waitSeconds = attempt * 15;
-                    log.warn("Groq rate limit hit. Retrying in {}s (attempt {}/{})", waitSeconds, attempt, maxRetries);
-                    try { Thread.sleep(waitSeconds * 1000L); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-                    continue;
+            } catch (WebClientResponseException e) {
+                log.error("Groq API error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+                if (e.getStatusCode().value() == 401) {
+                    throw new BusinessException(
+                            "Invalid Groq API key. Please check your configuration.",
+                            HttpStatus.INTERNAL_SERVER_ERROR);
                 }
-                throw new BusinessException("Groq API rate limit reached. Please wait a moment and try again.", HttpStatus.TOO_MANY_REQUESTS);
+                if (e.getStatusCode().value() == 429) {
+                    if (attempt < maxRetries) {
+                        int waitSeconds = attempt * 15;
+                        log.warn("Groq rate limit hit. Retrying in {}s (attempt {}/{})",
+                                waitSeconds, attempt, maxRetries);
+                        try {
+                            Thread.sleep(waitSeconds * 1000L);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        continue;
+                    }
+                    throw new BusinessException(
+                            "Groq API rate limit reached. Please wait a moment and try again.",
+                            HttpStatus.TOO_MANY_REQUESTS);
+                }
+                throw new BusinessException(
+                        "AI service error: " + e.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            } catch (Exception e) {
+                log.error("Groq client error: {}", e.getMessage(), e);
+                throw new BusinessException(
+                        "Failed to connect to AI service: " + e.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            throw new BusinessException("AI service error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-          } catch (Exception e) {
-            log.error("Groq client error: {}", e.getMessage(), e);
-            throw new BusinessException("Failed to connect to AI service: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-          }
         }
     }
 
@@ -100,9 +113,8 @@ public class GroqClient {
             cleaned = cleaned.replaceFirst("^```(?:json)?\\s*", "");
             cleaned = cleaned.replaceFirst("\\s*```$", "");
         }
-        // Find first { and last }
         int first = cleaned.indexOf('{');
-        int last = cleaned.lastIndexOf('}');
+        int last  = cleaned.lastIndexOf('}');
         if (first >= 0 && last > first) {
             return cleaned.substring(first, last + 1);
         }

@@ -33,10 +33,11 @@ ComplianceAI reduces manual contract and policy review from **days to minutes** 
 | Layer | Technology |
 |---|---|
 | **Frontend** | React 18, Tailwind CSS, Chart.js, Axios, React Router v6 |
-| **Backend** | Spring Boot 3.2, Spring Security, JWT |
-| **Database** | MongoDB 7 |
-| **AI** | Groq API — Llama 3.3 70B Versatile |
-| **Deployment** | Docker, Docker Compose |
+| **Backend** | Spring Boot 3.3, Spring Security, JWT |
+| **Database** | MongoDB Atlas |
+| **AI** | Google Gemini 2.0 Flash |
+| **Frontend Hosting** | Vercel |
+| **Backend Hosting** | Render |
 
 ---
 
@@ -66,18 +67,18 @@ tos-extractor/
 │       ├── pages/           # All 12 pages
 │       ├── services/        # api.js, analysisService.js
 │       └── utils/           # riskUtils.js
-└── docker-compose.yml
+└── render.yaml
 ```
 
 ---
 
-## Installation (Local Development)
+## Local Development
 
 ### Prerequisites
-- Java 17+
+- Java 21+
 - Maven 3.9+
 - Node.js 18+
-- MongoDB running on localhost:27017
+- MongoDB running on `localhost:27017`
 
 ### 1. Clone the repository
 ```bash
@@ -87,12 +88,12 @@ cd tos-extractor
 
 ### 2. Configure backend
 ```bash
-# Edit backend/src/main/resources/application.properties
-# Set your Groq API key:
-app.groq.api-key=gsk_your_key_here
+cd backend
+cp .env.example .env
+# Edit .env and set your values (see Environment Variables section below)
 ```
 
-### 3. Build and run backend
+### 3. Run the backend
 ```bash
 cd backend
 mvn clean install -DskipTests
@@ -100,7 +101,14 @@ mvn spring-boot:run
 # API running at http://localhost:5000
 ```
 
-### 4. Run frontend
+### 4. Configure frontend
+```bash
+cd frontend
+cp .env.example .env
+# .env already points to http://localhost:5000/api — no changes needed for local dev
+```
+
+### 5. Run the frontend
 ```bash
 cd frontend
 npm install
@@ -110,35 +118,101 @@ npm start
 
 ---
 
-## Environment Variables
+## Deployment
 
-### Backend (application.properties)
-| Key | Description |
-|---|---|
-| `app.groq.api-key` | Your Groq API key (starts with `gsk_`) |
-| `app.jwt.secret` | JWT signing secret (change in production) |
-| `spring.data.mongodb.uri` | MongoDB connection string |
-| `app.cors.allowed-origins` | Frontend URL for CORS |
+### Architecture
 
-### Frontend (.env)
-| Key | Description |
-|---|---|
-| `REACT_APP_API_URL` | Backend API URL |
+```
+React (Vercel)  →  Spring Boot (Render)  →  MongoDB Atlas
+                                         →  Gemini API
+```
 
 ---
 
-## Running with Docker
+### Step 1 — MongoDB Atlas
 
-```bash
-# Set your Groq API key
-export GROQ_API_KEY=gsk_your_key_here
+1. Create a free cluster at [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a database user with read/write access
+3. Whitelist `0.0.0.0/0` (allow all IPs) under Network Access
+4. Copy the connection string — it looks like:
+   ```
+   mongodb+srv://<user>:<password>@<cluster>.mongodb.net/compliance_platform?retryWrites=true&w=majority
+   ```
 
-# Build and start all services
-docker-compose up --build
+---
 
-# App available at http://localhost:3000
-# API available at http://localhost:5000
+### Step 2 — Backend on Render
+
+1. Go to [render.com](https://render.com) → **New → Web Service**
+2. Connect your GitHub repository
+3. Configure the service:
+   - **Root Directory:** `backend`
+   - **Runtime:** Java
+   - **Build Command:** `mvn clean install -DskipTests`
+   - **Start Command:** `java -jar target/platform-1.0.0.jar`
+4. Add the following **Environment Variables** in the Render dashboard:
+
+| Variable | Value |
+|---|---|
+| `MONGODB_URI` | Your MongoDB Atlas connection string |
+| `JWT_SECRET` | A long random secret string |
+| `GROQ_API_KEY` | Your Groq API key from [console.groq.com](https://console.groq.com) |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,https://your-app.vercel.app` |
+
+> **Note:** Render sets `PORT` automatically — do not add it manually.
+
+5. Deploy. Your backend URL will be: `https://your-backend.onrender.com`
+
+---
+
+### Step 3 — Frontend on Vercel
+
+1. Go to [vercel.com](https://vercel.com) → **New Project**
+2. Import your GitHub repository
+3. Set **Root Directory** to `frontend`
+4. Add the following **Environment Variables** in Vercel Project Settings:
+
+| Variable | Value |
+|---|---|
+| `REACT_APP_API_URL` | `https://your-backend.onrender.com/api` |
+| `REACT_APP_APP_NAME` | `ComplianceAI Enterprise Platform` |
+| `REACT_APP_VERSION` | `2.0.0` |
+
+5. Deploy. Your frontend URL will be: `https://your-app.vercel.app`
+
+---
+
+### Step 4 — Update CORS on Render
+
+Once you have your Vercel URL, go back to your Render service and update:
+
 ```
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-app.vercel.app
+```
+
+Then redeploy the backend.
+
+---
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Description | Example |
+|---|---|---|
+| `PORT` | Server port (Render sets automatically) | `5000` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://...` |
+| `JWT_SECRET` | JWT signing secret | `change-me-in-prod` |
+| `GROQ_API_KEY` | Groq API key | `gsk_...` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins | `http://localhost:3000,https://app.vercel.app` |
+
+### Frontend (`frontend/.env`)
+
+| Variable | Description | Example |
+|---|---|---|
+| `REACT_APP_API_URL` | Backend API base URL | `https://your-backend.onrender.com/api` |
+| `REACT_APP_APP_NAME` | App display name | `ComplianceAI Enterprise Platform` |
+| `REACT_APP_VERSION` | App version | `2.0.0` |
 
 ---
 
