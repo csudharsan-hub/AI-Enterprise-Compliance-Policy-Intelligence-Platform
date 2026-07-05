@@ -51,3 +51,6 @@ coverage/
 
 # Maven wrapper (optional — keep if you want Render to use it)
 # .mvn/
+
+# Node binary folder (not needed in repo)
+frontend/node/
