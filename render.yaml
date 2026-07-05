@@ -3,7 +3,7 @@ services:
     name: compliance-platform-backend
     runtime: java
     rootDir: backend
-    buildCommand: mvn clean install -DskipTests
+    buildCommand: chmod +x mvnw && ./mvnw clean install -DskipTests
     startCommand: java -jar target/platform-1.0.0.jar
     plan: free
     healthCheckPath: /api/health
