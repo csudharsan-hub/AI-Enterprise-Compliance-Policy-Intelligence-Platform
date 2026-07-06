@@ -24,7 +24,7 @@ export default function AdminPage() {
   const handleRoleChange = async (userId, role) => {
     setSaving(userId);
     try {
-      const updated = await updateUserRole(userId, role);
+      await updateUserRole(userId, role);
       setUsers(p => p.map(u => (u.id||u._id)===userId ? { ...u, roles:[role] } : u));
       toast.success(`Role updated to ${getRoleLabel(role)}`);
     } catch(e) { toast.error(e.message); }

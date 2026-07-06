@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiGitMerge, FiArrowRight, FiPlus, FiMinus, FiEdit } from 'react-icons/fi';
+import { FiGitMerge, FiPlus, FiMinus, FiEdit } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import AppLayout from '../components/common/AppLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';

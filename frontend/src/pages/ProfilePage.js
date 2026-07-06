@@ -3,13 +3,13 @@ import { FiUser, FiMail, FiLock, FiSave, FiBriefcase, FiEye, FiEyeOff } from 're
 import { toast } from 'react-toastify';
 import AppLayout from '../components/common/AppLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { RiskBadge, StatusBadge } from '../components/common/RiskBadge';
+import { RiskBadge } from '../components/common/RiskBadge';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../services/analysisService';
 import { formatDate, getDocTypeLabel, getRoleLabel, getRoleColor } from '../utils/riskUtils';
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);

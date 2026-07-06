@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiActivity, FiRefreshCw, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import AppLayout from '../components/common/AppLayout';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import { getAuditLogs } from '../services/analysisService';
 import { formatDateTime, getRoleLabel, getRoleColor } from '../utils/riskUtils';
 import { toast } from 'react-toastify';
