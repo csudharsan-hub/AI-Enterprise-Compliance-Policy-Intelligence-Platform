@@ -8,6 +8,7 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 public class CorsConfig {
@@ -23,7 +24,11 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         String origins = appProperties.getCors().getAllowedOrigins();
-        List<String> originList = Arrays.asList(origins.split(","));
+        // Trim whitespace around each origin in case of accidental spaces in env var
+        List<String> originList = Arrays.stream(origins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
         config.setAllowedOrigins(originList);
 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -33,7 +38,8 @@ public class CorsConfig {
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
+        // Register on /** so OPTIONS preflight requests on any path are handled
+        source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
     }
