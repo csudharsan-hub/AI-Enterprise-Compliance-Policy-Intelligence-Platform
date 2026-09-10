@@ -35,7 +35,6 @@ public class DocumentExtractionService {
 
         String filename = file.getOriginalFilename() != null
                 ? file.getOriginalFilename().toLowerCase() : "";
-
         try {
             if (filename.endsWith(".pdf")) {
                 return extractFromPDF(file.getInputStream());

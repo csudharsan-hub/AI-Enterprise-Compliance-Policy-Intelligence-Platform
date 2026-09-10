@@ -91,8 +91,14 @@ public class GroqClient {
                             "Groq API rate limit reached. Please wait a moment and try again.",
                             HttpStatus.TOO_MANY_REQUESTS);
                 }
+
+                String errorDetails = e.getResponseBodyAsString();
+                if (errorDetails == null || errorDetails.isBlank()) {
+                    errorDetails = e.getMessage();
+                }
+
                 throw new BusinessException(
-                        "AI service error: " + e.getMessage(),
+                        "AI service error: " + e.getStatusCode().value() + " - " + errorDetails,
                         HttpStatus.INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
                 log.error("Groq client error: {}", e.getMessage(), e);
@@ -107,14 +113,15 @@ public class GroqClient {
      * Strip markdown fences if model returned them despite instructions.
      */
     private String cleanJsonResponse(String content) {
-        if (content == null) return "{}";
+        if (content == null)
+            return "{}";
         String cleaned = content.trim();
         if (cleaned.startsWith("```")) {
             cleaned = cleaned.replaceFirst("^```(?:json)?\\s*", "");
             cleaned = cleaned.replaceFirst("\\s*```$", "");
         }
         int first = cleaned.indexOf('{');
-        int last  = cleaned.lastIndexOf('}');
+        int last = cleaned.lastIndexOf('}');
         if (first >= 0 && last > first) {
             return cleaned.substring(first, last + 1);
         }
