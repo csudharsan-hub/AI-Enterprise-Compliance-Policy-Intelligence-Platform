@@ -25,7 +25,7 @@ public class AppProperties {
     public static class Groq {
         private String apiKey;
         private String baseUrl = "https://api.groq.com/openai/v1";
-        private String model = "llama3-8b-8192";
+        private String model = "llama-3.1-8b-instant";
         private int maxTokens = 4096;
         private double temperature = 0.1;
     }
