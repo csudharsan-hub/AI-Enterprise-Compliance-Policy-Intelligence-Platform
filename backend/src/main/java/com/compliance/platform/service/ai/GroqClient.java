@@ -70,6 +70,35 @@ public class GroqClient {
 
             } catch (WebClientResponseException e) {
                 log.error("Groq API error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
+
+                String errorDetails = e.getResponseBodyAsString();
+                String parsedMessage = "Unknown error";
+
+                try {
+                    if (errorDetails != null && !errorDetails.isBlank()) {
+                        JsonNode errRoot = objectMapper.readTree(errorDetails);
+                        JsonNode errNode = errRoot.path("error");
+                        if (!errNode.isMissingNode()) {
+                            parsedMessage = errNode.path("message").asText("Unknown error");
+                            String code = errNode.path("code").asText("");
+                            if ("model_decommissioned".equals(code) || parsedMessage.contains("decommissioned")) {
+                                parsedMessage = "The configured AI model is decommissioned. Please update GROQ_MODEL.";
+                            }
+                        } else {
+                            parsedMessage = errorDetails;
+                        }
+                    } else {
+                        parsedMessage = e.getMessage();
+                    }
+                } catch (Exception parseEx) {
+                    parsedMessage = errorDetails != null && !errorDetails.isBlank() ? errorDetails : e.getMessage();
+                }
+
+                if (e.getStatusCode().value() == 400) {
+                    throw new BusinessException(
+                            "Invalid request to AI provider: " + parsedMessage,
+                            HttpStatus.BAD_REQUEST);
+                }
                 if (e.getStatusCode().value() == 401) {
                     throw new BusinessException(
                             "Invalid Groq API key. Please check your configuration.",
@@ -91,14 +120,27 @@ public class GroqClient {
                             "Groq API rate limit reached. Please wait a moment and try again.",
                             HttpStatus.TOO_MANY_REQUESTS);
                 }
-
-                String errorDetails = e.getResponseBodyAsString();
-                if (errorDetails == null || errorDetails.isBlank()) {
-                    errorDetails = e.getMessage();
+                if (e.getStatusCode().is5xxServerError()) {
+                    throw new BusinessException(
+                            "AI provider is currently unavailable (" + e.getStatusCode().value()
+                                    + "). Please try again later.",
+                            HttpStatus.SERVICE_UNAVAILABLE);
                 }
 
                 throw new BusinessException(
-                        "AI service error: " + e.getStatusCode().value() + " - " + errorDetails,
+                        "AI service error: " + e.getStatusCode().value() + " - " + parsedMessage,
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            } catch (org.springframework.web.reactive.function.client.WebClientRequestException e) {
+                if (e.getCause() instanceof java.util.concurrent.TimeoutException
+                        || e.getCause() instanceof io.netty.handler.timeout.ReadTimeoutException) {
+                    log.error("Groq client timeout", e);
+                    throw new BusinessException(
+                            "AI service timeout. The provider took too long to respond.",
+                            HttpStatus.GATEWAY_TIMEOUT);
+                }
+                log.error("Groq client error: {}", e.getMessage(), e);
+                throw new BusinessException(
+                        "Failed to connect to AI service: " + e.getMessage(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
                 log.error("Groq client error: {}", e.getMessage(), e);
